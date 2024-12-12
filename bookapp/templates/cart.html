@@ -1,0 +1,77 @@
+{% extends 'layout/base.html' %}
+{% block title %} Your Cart {% endblock %}
+
+{% block content %}
+
+<!-- Cart Start -->
+<div class="cart-page">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="table-responsive">
+                    {% if 'cart' in session and session['cart'] %}
+                    <table class="table table-bordered">
+                        <thead class="thead-dark">
+                        <tr>
+                            <th>ID Product</th>
+                            <th>Name</th>
+
+                            <th>Quantity</th>
+                            <th>Total</th>
+                            <th>Remove</th>
+                        </tr>
+                        </thead>
+                        <tbody class="align-middle">
+                        {% for c in session['cart'].values() %}
+                        <tr>
+                            <td><a href="#">{{c.id}}</a></td>
+                            <td><a href="#">{{c.name}}</a></td>
+
+                            <td>
+                                <div class="qty">
+                                    <button class="btn-minus"><i class="fa fa-minus"></i></button>
+                                    <input type="text" value="{{c.quantity}}">
+                                    <button class="btn-plus"><i class="fa fa-plus"></i></button>
+                                </div>
+                            </td>
+                            <td>{{ "{:,.1f}".format(float(c.price) * int(c.quantity)) }} VND</td>
+
+                            <td>
+                                <button><i class="fa fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                        <h4>Not found product in cart !</h4>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="coupon">
+                    <input type="text" placeholder="Coupon Code">
+                    <button>Apply Code</button>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="cart-summary">
+                    <div class="cart-content">
+                        <h3>Cart Summary</h3>
+                        <p>Total Products<span>{{ stats.total_quantity }}</span></p>
+                        <p>Shipping Cost<span>0</span></p>
+                        <h4>Total Price<span>{{ "{:,.1f}".format(stats.total_amount) }} VND</span></h4>
+                    </div>
+                    <div class="cart-btn">
+                        <button>Update Cart</button>
+                        <button onclick="pay()">Thanh toán</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Cart End -->
+{% endblock %}

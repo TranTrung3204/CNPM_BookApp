@@ -1,0 +1,55 @@
+{% extends 'layout/base.html' %}
+{% block title %} Đăng ký người dùng {% endblock %}
+
+{% block content %}
+<!-- Login Start -->
+<div class="login">
+    <div class="container">
+        <div class="section-header">
+            <h3>User Registration</h3>
+        </div>
+        {% if err_msg %}
+        <div class="alert alert-danger">
+            <h4>{{err_msg}}</h4>
+
+        </div>
+        {% endif %}
+        <div class="row">
+            <div class="register-form">
+                <form method="post" action="{{ url_for('user_register') }}" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-12">
+                            <label>Your Name</label>
+                            <input class="form-control" type="text" placeholder="Your Name" name="name" id="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Email</label>
+                            <input class="form-control" type="email" placeholder="Email" name="email" id="email">
+                        </div>
+                        <div class="col-md-6">
+                            <label>User Name</label>
+                            <input class="form-control" type="text" placeholder="User Name" name="username" id="username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Password</label>
+                            <input class="form-control" type="password" placeholder="Password" name="password" id="password">
+                        </div>
+                        <div class="col-md-6">
+                            <label>Confirm Password</label>
+                            <input class="form-control" type="password" placeholder="Confirm Password" name="confirm" id="confirm">
+                        </div>
+                        <div class="col-12">
+                            <label>Avatar</label>
+                            <input class="form-control" type="file" placeholder="Avatar" name="avatar" id="avatar" >
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Register</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Login End -->
+{% endblock %}
