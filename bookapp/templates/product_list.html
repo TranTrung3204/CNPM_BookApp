@@ -7,7 +7,6 @@
     <div class="container">
         <ul class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
-            <li class="breadcrumb-item"><a href="#">Products</a></li>
             <li class="breadcrumb-item active">Product List</li>
         </ul>
     </div>
@@ -67,40 +66,60 @@
                 <div class="col-12">
                     <nav aria-label="Page navigation example">
                         <ul class="pagination justify-content-center">
+                            <!-- Nút Previous -->
+                            {% if current_page > 1 %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('product_list', page=current_page - 1) }}">Previous</a>
+                            </li>
+                            {% else %}
                             <li class="page-item disabled">
                                 <a class="page-link" href="#" tabindex="-1">Previous</a>
                             </li>
-                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                            <li class="page-item"><a class="page-link" href="#">2</a></li>
-                            <li class="page-item"><a class="page-link" href="#">3</a></li>
-                            <li class="page-item">
-                                <a class="page-link" href="#">Next</a>
+                            {% endif %}
+
+                            <!-- Hiển thị số trang -->
+                            {% for i in range(1, total_pages + 1) %}
+                            <li class="page-item {% if i == current_page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('product_list', page=i) }}">{{ i }}</a>
                             </li>
+                            {% endfor %}
+
+                            <!-- Nút Next -->
+                            {% if current_page < total_pages %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="{{ url_for('product_list', page=current_page + 1) }}">Next</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Next</a>
+                            </li>
+                            {% endif %}
                         </ul>
                     </nav>
                 </div>
-            </div>
 
-            <!-- Sidebar: Categories -->
-            <div class="col-lg-3">
-                <div class="sidebar-widget category">
-                    <h2 class="title">Category</h2>
-                    <ul>
-                        {% for category in categories %}
-                        <li>
-                            <a href="{{ url_for('filter_by_category', category_id=category.id) }}">{{ category.name }}</a>
-                            <span>({{ category.product_count }})</span>
-                        </li>
-                        {% endfor %}
-                    </ul>
+                <!-- Sidebar: Categories -->
+                <div class="col-lg-3">
+                    <div class="sidebar-widget category">
+                        <h2 class="title">Category</h2>
+                        <ul>
+                            {% for category in categories %}
+                            <li>
+                                <a href="{{ url_for('filter_by_category', category_id=category.id) }}">{{ category.name
+                                    }}</a>
+                                <span>({{ category.product_count }})</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+    <!-- Product List End -->
+    {% endblock %}
 </div>
-<!-- Product List End -->
-{% endblock %}
-
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
 <script>

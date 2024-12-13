@@ -3,8 +3,8 @@ from flask import request, redirect, url_for, session, jsonify
 from flask_login import login_user, logout_user
 import cloudinary.uploader
 from bookapp import app, utils,login
-from bookapp.models import UserRole
-
+from bookapp.models import UserRole,Book,BookCategory
+from math import ceil
 
 @app.route("/")
 def index():
@@ -138,18 +138,6 @@ def add_to_cart():
     return jsonify(utils.count_cart(cart))
 
 
-@app.context_processor
-def common_response():
-    return {
-        'categories': utils.load_book_categories(),
-        'cart_stats': utils.count_cart(session.get('cart',{}))
-    }
-@app.context_processor
-def utility_processor():
-    return {
-        'float': float,
-        'int': int
-    }
 
 
 @app.route('/api/update-cart', methods=['POST'])
@@ -213,17 +201,36 @@ def pay():
 
     return jsonify({'code': 200})
 
-
-
-@app.route('/all-product')
+@app.route('/product-list')
 def product_list():
-    err_msg = ""
-    products = utils.load_books()
-    return render_template('product_list.html',
-                           err_msg=err_msg,
-                           products=products,
-                           stats=utils.count_cart(session.get('cart')))
+    page = request.args.get('page', 1, type=int)  # Số trang hiện tại, mặc định là 1
+    per_page = 9  # Số sản phẩm mỗi trang
+    kw = request.args.get('kw', '').strip()  # Tìm kiếm theo tên sản phẩm
+    category_id = request.args.get('category_id', type=int)  # Lọc theo danh mục sản phẩm
 
+    query = Book.query
+
+    if kw:
+        query = query.filter(Book.name.ilike(f"%{kw}%"))
+
+    if category_id:
+        query = query.filter(Book.category_id == category_id)
+
+    total = query.count()
+    products = query.offset((page - 1) * per_page).limit(per_page).all()
+    total_pages = ceil(total / per_page)
+
+    return render_template('product_list.html',
+                           products=products,
+                           current_page=page,
+                           total_pages=total_pages,
+                           categories=utils.load_book_categories())
+@app.context_processor
+def common_response():
+    return {
+        'categories': utils.load_book_categories(),
+        'cart_stats': utils.count_cart(session.get('cart',{}))
+    }
 
 
 
