@@ -67,12 +67,30 @@ def search():
 
     return render_template('product_list.html', products=products, categories=categories, kw=kw)
 
-
-
 @app.route('/category/<int:category_id>')
 def filter_by_category(category_id):
-    prods = utils.load_books_by_category(category_id)
-    return render_template('product_list.html', products=prods)
+    page = request.args.get('page', 1, type=int)
+    per_page = 6
+
+    # Đếm tổng số sản phẩm trong category
+    total_products = Book.query.filter(Book.category_id == category_id).count()
+
+    # Truy vấn sản phẩm theo category với phân trang
+    products = Book.query.filter(Book.category_id == category_id) \
+        .offset((page - 1) * per_page) \
+        .limit(per_page) \
+        .all()
+
+    # Tính tổng số trang
+    total_pages = max(1, ceil(total_products / per_page))
+
+    # Luôn hiển thị phân trang nếu tổng số sản phẩm > 6
+    return render_template('product_list.html',
+                           products=products,
+                           category_id=category_id,
+                           categories=utils.load_book_categories(),
+                           current_page=page if total_products > per_page else None,
+                           total_pages=total_pages if total_products > per_page else None)
 
 
 @app.route("/user-login", methods=['get', 'post'])
@@ -110,7 +128,9 @@ def user_signout():
 @app.route('/cart')
 def cart():
     err_msg = ""
+    cart = session.get('cart', {})
     return render_template('cart.html',
+                           cart=cart,
                            err_msg=err_msg,
                            stats=utils.count_cart(session.get('cart')))
 
@@ -136,8 +156,6 @@ def add_to_cart():
     session['cart'] = cart
 
     return jsonify(utils.count_cart(cart))
-
-
 
 
 @app.route('/api/update-cart', methods=['POST'])
@@ -203,28 +221,32 @@ def pay():
 
 @app.route('/product-list')
 def product_list():
-    page = request.args.get('page', 1, type=int)  # Số trang hiện tại, mặc định là 1
-    per_page = 9  # Số sản phẩm mỗi trang
-    kw = request.args.get('kw', '').strip()  # Tìm kiếm theo tên sản phẩm
-    category_id = request.args.get('category_id', type=int)  # Lọc theo danh mục sản phẩm
+    page = request.args.get('page', 1, type=int)  # Lấy số trang từ query string
+    per_page = 6  # Số sản phẩm mỗi trang
+    kw = request.args.get('kw', '').strip()  # Tìm kiếm theo từ khóa
+    category_id = request.args.get('category_id', type=int)  # Lọc theo danh mục
 
     query = Book.query
 
     if kw:
-        query = query.filter(Book.name.ilike(f"%{kw}%"))
+        query = query.filter(Book.name.ilike(f"%{kw}%"))  # Tìm kiếm tên sách
 
     if category_id:
-        query = query.filter(Book.category_id == category_id)
+        query = query.filter(Book.category_id == category_id)  # Lọc danh mục
 
-    total = query.count()
-    products = query.offset((page - 1) * per_page).limit(per_page).all()
-    total_pages = ceil(total / per_page)
+    total = query.count()  # Tổng số sản phẩm
+    products = query.offset((page - 1) * per_page).limit(per_page).all()  # Phân trang
+    total_pages = max(1, ceil(total / per_page))  # Tính tổng số trang (ít nhất là 1)
 
-    return render_template('product_list.html',
-                           products=products,
-                           current_page=page,
-                           total_pages=total_pages,
-                           categories=utils.load_book_categories())
+    return render_template(
+        'product_list.html',
+        products=products,
+        current_page=page,
+        total_pages=total_pages,  # Truyền `total_pages` tới template
+        categories=utils.load_book_categories()
+    )
+
+
 @app.context_processor
 def common_response():
     return {

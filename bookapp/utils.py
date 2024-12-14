@@ -7,7 +7,13 @@ import hashlib
 
 
 def load_book_categories():
-    return BookCategory.query.order_by('id').all()
+    categories = BookCategory.query.order_by('id').all()
+    if not categories:
+        return []  # Đảm bảo trả về danh sách rỗng nếu không có danh mục
+    for category in categories:
+        category.product_count = Book.query.filter(Book.category_id == category.id).count()
+    return categories
+
 
 
 def load_books(kw: object = None) -> object:
