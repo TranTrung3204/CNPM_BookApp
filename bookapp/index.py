@@ -1,4 +1,4 @@
-from flask import render_template, Flask
+from flask import render_template, Flask, flash
 from flask import request, redirect, url_for, session, jsonify
 from flask_login import login_user, logout_user
 import cloudinary.uploader
