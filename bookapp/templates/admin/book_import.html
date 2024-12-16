@@ -1,0 +1,43 @@
+{% extends 'admin/base.html' %}
+{% block body %}
+<div class="container">
+    <h1>Lập Phiếu Nhập Sách</h1>
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <form method="POST" action="{{ url_for('bookimportview.add_import') }}">
+                <!-- Tên sách -->
+                <div class="form-group">
+                    <label for="book_name">Tên Sách:</label>
+                    <input type="text" name="book_name" class="form-control" required>
+                </div>
+
+                <!-- Thể loại -->
+                <div class="form-group">
+                    <label for="category_name">Thể Loại:</label>
+                    <input type="text" name="category_name" class="form-control" required>
+                </div>
+
+                <!-- Số lượng -->
+                <div class="form-group">
+                    <label for="quantity">Số Lượng:</label>
+                    <input type="number" name="quantity" class="form-control" required>
+                </div>
+
+                <!-- Đơn giá -->
+                <div class="form-group">
+                    <label for="unit_price">Đơn Giá:</label>
+                    <input type="number" name="unit_price" class="form-control" step="0.01" required>
+                </div>
+
+                <!-- Ngày nhập -->
+                <div class="form-group">
+                    <label for="import_date">Ngày Nhập:</label>
+                    <input type="date" name="import_date" class="form-control">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Lập Phiếu Nhập</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
