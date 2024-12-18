@@ -59,8 +59,19 @@ function addToCart(id, name, price) {
     })
     .then(response => response.json())
     .then(data => {
-        // Cập nhật số lượng giỏ hàng trên header
-        document.getElementById('cartCounter').innerText = data.total_quantity;
+        // Kiểm tra nếu mã trạng thái là 401 (chưa đăng nhập)
+        if (data.code === 401) {
+            // Hiển thị thông báo
+            alert(data.message);
+            // Chuyển hướng đến trang đăng nhập
+            window.location.href = '/user-login';
+        } else {
+            // Cập nhật số lượng giỏ hàng trên header
+            document.getElementById('cartCounter').innerText = data.total_quantity;
+
+            // Thêm hiệu ứng thông báo thêm sản phẩm thành công
+            alert('Đã thêm sản phẩm vào giỏ hàng');
+        }
     })
     .catch(error => {
         console.error('Error:', error);

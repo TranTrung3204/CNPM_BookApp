@@ -39,9 +39,8 @@
                                 {{p.price}}VND
                             </h4>
                         </div>
-                        <a href="#" onclick="addToCart({{p.id}}, '{{p.name}}', {{p.price}})"
+                        <a href="#" onclick="event.preventDefault(); addToCart({{p.id}}, '{{p.name}}', {{p.price}})"
                            class="btn btn-primary rounded-3 d-flex justify-content-center py-3">Đặt ngay</a>
-
                     </div>
                 </div>
             </div>

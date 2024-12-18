@@ -136,26 +136,34 @@ def cart():
 
 @app.route('/api/add-cart', methods=['post'])
 def add_to_cart():
+    # Kiểm tra xem người dùng đã đăng nhập chưa
+    if not current_user.is_authenticated:
+        return jsonify({
+            'code': 401,  # Mã trạng thái chưa được ủy quyền
+            'message': 'Vui lòng đăng nhập trước khi thêm sản phẩm vào giỏ hàng!'
+        })
+
     data = request.json
     id = str(data.get('id'))
     name = data.get('name')
-    price = float(data.get('price'))  # Ép kiểu thành float
+    price = float(data.get('price'))
 
     cart = session.get('cart', {})
     if not cart:
-        cart ={}
+        cart = {}
     if id in cart:
         cart[id]['quantity'] += 1
     else:
         cart[id] = {
             'id': id,
             'name': name,
-            'price': price,  # Giá là float
+            'price': price,
             'quantity': 1
         }
     session['cart'] = cart
 
     return jsonify(utils.count_cart(cart))
+
 
 
 @app.route('/api/update-cart', methods=['POST'])
