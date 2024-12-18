@@ -1,6 +1,9 @@
+
 from bookapp.models import BookCategory,Book,User,Receipt, ReceiptDetail,UserRole
 from bookapp import app, db
 from flask_login import  current_user
+from sqlalchemy import func
+from sqlalchemy.sql import extract
 import hashlib
 
 
@@ -90,3 +93,39 @@ def add_receipt(cart):
             db.session.add(d)
 
         db.session.commit()
+
+
+
+
+
+def products_stats(kw=None, from_date=None, to_date=None):
+    p = db.session.query(
+        Book.id,
+        Book.name,
+        func.sum(ReceiptDetail.quantity * ReceiptDetail.unit_price).label('total_price'))\
+        .join(ReceiptDetail, ReceiptDetail.product_id == Book.id, isouter=True)\
+        .join(Receipt, Receipt.id == ReceiptDetail.receipt_id)
+
+
+    if kw:
+        p = p.filter(Book.name.contains(kw))
+
+    if from_date:
+        p = p.filter(Receipt.created_date.__ge__(from_date))
+
+
+    if to_date:
+        p = p.filter(Receipt.created_date.__le__(to_date))
+
+
+    p = p.group_by(Book.id)
+
+    return p.all()
+
+def product_month_stats(year):
+    return db.session.query(extract('month', Receipt.created_date),
+                            func.sum(ReceiptDetail.quantity*ReceiptDetail.unit_price))\
+                        .join(ReceiptDetail, ReceiptDetail.receipt_id.__eq__(Receipt.id))\
+                        .filter(extract('year', Receipt.created_date) == year)\
+                        .group_by(extract('month', Receipt.created_date))\
+                        .order_by(extract('month', Receipt.created_date)).all()

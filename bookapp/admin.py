@@ -1,10 +1,14 @@
+from datetime import datetime
+
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
-from bookapp import db, app
+from bookapp import db, app, utils
 from bookapp.models import BookCategory, Book, UserRole
 from flask_admin import BaseView, expose
 from flask_login import current_user, logout_user, login_required
 from flask import redirect
+from flask import request
+from datetime import datetime
 
 
 admin = Admin(app=app, name="BookStore Management", template_mode="bootstrap4")
@@ -39,6 +43,7 @@ class BookCategoryView(AuthenticatedModelView):
     }
 
 
+
 class LogoutView(BaseView):
     @expose('/')
     def index(self):
@@ -48,7 +53,26 @@ class LogoutView(BaseView):
     def is_accessible(self):
         return current_user.is_authenticated
 
+class StatsView(BaseView):
+    @expose('/')
+    def index(self):
+        kw = request.args.get('kw')
+        from_date = request.args.get('from_date')
+        to_date = request.args.get('to_date')
+        year = request.args.get('year', datetime.now().year)
+
+        return self.render('admin/stats.html',
+                           month_stats = utils.product_month_stats(year=year),
+                           stats=utils.products_stats(kw=kw,
+                                                      from_date = from_date,
+                                                      to_date = to_date))
+
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.user_role == UserRole.ADMIN
+
+
 
 admin.add_view(BookCategoryView(BookCategory, db.session))
 admin.add_view(BookView(Book, db.session))
 admin.add_view(LogoutView(name='Log out'))
+admin.add_view(StatsView(name='Stats'))
