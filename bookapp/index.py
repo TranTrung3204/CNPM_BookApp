@@ -107,16 +107,26 @@ def user_signin():
             err_msg = 'Username or password is incorrect !!!'
     return render_template('login.html', err_msg=err_msg)
 
-@app.route('/admin-login', methods=['post'])
+from flask import render_template, request, redirect, flash
+from flask_login import login_user
+
+@app.route('/admin-login', methods=['POST'])
 def admin_login():
-    if request.method.__eq__('POST'):
+    if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+
+        # Kiểm tra đăng nhập
         user = utils.check_login(username=username, password=password, user_role=UserRole.ADMIN)
 
-    if user:
-        login_user(user=user)
-        return redirect('/admin')
+        if user:
+            login_user(user=user)  # Đăng nhập thành công
+            return redirect('/admin')  # Chuyển hướng đến trang quản trị
+
+        else:
+            flash('Đăng nhập không hợp lệ. Vui lòng kiểm tra lại thông tin.', 'error')  # Thông báo lỗi
+            return render_template('admin/index.html')  # Quay lại trang đăng nhập với thông báo lỗi
+
 
 
 @app.route("/user-logout")

@@ -38,7 +38,8 @@
                         <div class="product-item">
                             <div class="product-image">
                                 <a href="#">
-                                    <img src="{{ product.image or 'img/default-book.png' }}" alt="{{ product.name }}" class="img-fluid">
+                                    <img src="{{ url_for('static', filename=(product.image if product.image else product.name)) }}"
+                                 style=" padding: 5px;" class="img-fluid">
                                 </a>
                             </div>
                             <div class="product-content text-center">

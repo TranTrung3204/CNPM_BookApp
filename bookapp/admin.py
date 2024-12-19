@@ -65,7 +65,7 @@ class BookImportView(BaseView):
     def add_import(self):
         # Lấy quy định về số lượng nhập tối thiểu từ cơ sở dữ liệu
         min_quantity_value = self.get_min_quantity()
-
+        max_stock_value = self.get_max_stock()
         # Lấy thông tin form nhập sách
         book_name = request.form.get('book_name')
         category_name = request.form.get('category_name')  # Lấy thể loại từ form
@@ -91,8 +91,9 @@ class BookImportView(BaseView):
         try:
             if book:
                 # Nếu sách đã tồn tại, kiểm tra điều kiện số lượng
-                if book.stock >= 300:
-                    flash(f'Số lượng sách "{book_name}" trong kho đã đủ (>= 300). Không thể nhập thêm!', 'error')
+                if book.stock >= max_stock_value:
+                    flash(f'Số lượng sách "{book_name}" trong kho đã đủ (>= {max_stock_value}). Không thể nhập thêm!',
+                          'error')
                 elif quantity < min_quantity_value:
                     flash(f'Số lượng nhập vào phải lớn hơn hoặc bằng {min_quantity_value}.', 'error')
                 else:
@@ -125,9 +126,22 @@ class BookImportView(BaseView):
         return redirect(url_for('.index'))
 
     def get_min_quantity(self):
-        """Lấy giá trị số lượng nhập tối thiểu từ cơ sở dữ liệu."""
-        min_quantity = Regulation.query.filter_by(name='Số lượng nhập tối thiểu').first()
-        return int(min_quantity.value) if min_quantity else 150  # Giá trị mặc định là 150
+        min_quantity = Regulation.query.filter_by(
+            name='Số lượng nhập tối thiểu',
+            is_active=True
+        ).first()
+        if not min_quantity:
+            return 0
+        return int(min_quantity.value)
+
+    def get_max_stock(self):
+        """Lấy giá trị số lượng tồn kho tối đa từ cơ sở dữ liệu."""
+        max_stock = Regulation.query.filter_by(
+            name='Số lượng tồn tối đa',
+            is_active=True
+        ).first()
+        return int(max_stock.value) if max_stock else 300  # Giá trị mặc định là 300
+
 
     def get_integer_form_value(self, field_name, default_value=None):
         """Lấy giá trị int từ form và trả về giá trị mặc định nếu không hợp lệ."""
