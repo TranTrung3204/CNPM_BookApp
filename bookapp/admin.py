@@ -51,9 +51,6 @@ class LogoutView(BaseView):
 
 
 
-
-
-
 class BookImportView(BaseView):
     @expose('/')
     def index(self):
@@ -78,14 +75,14 @@ class BookImportView(BaseView):
             flash('Vui lòng điền đầy đủ thông tin!', 'error')
             return redirect(url_for('.index'))
 
-        # 1. Kiểm tra xem thể loại sách đã tồn tại chưa, nếu chưa thì thêm mới
+        # Kiểm tra xem thể loại sách đã tồn tại chưa, nếu chưa thì thêm mới
         category = BookCategory.query.filter_by(name=category_name).first()
         if not category:
             category = BookCategory(name=category_name)
             db.session.add(category)
             db.session.commit()
 
-        # 2. Kiểm tra xem sách đã tồn tại trong kho chưa
+        # Kiểm tra xem sách đã tồn tại trong kho chưa
         book = Book.query.filter_by(name=book_name).first()
 
         try:
@@ -114,7 +111,7 @@ class BookImportView(BaseView):
                 db.session.add(new_book)
                 flash(f'Tạo mới sách "{book_name}" thành công!', 'success')
 
-            # 3. Lập phiếu nhập sách
+            # Lập phiếu nhập sách
             self.create_import_entry(book_name, quantity, unit_price, import_date)
 
             # Commit thay đổi vào cơ sở dữ liệu
