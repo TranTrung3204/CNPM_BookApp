@@ -186,6 +186,9 @@ class BookImportView(BaseView):
             db.session.rollback()  # Hoàn tác nếu có lỗi
             flash(f'Đã xảy ra lỗi khi tạo phiếu nhập: {str(e)}', 'error')
 
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.user_role in [UserRole.ADMIN, UserRole.QLKHO]
+
 
 class RegulationView(BaseView):
     @expose('/')
@@ -258,6 +261,9 @@ class RegulationView(BaseView):
 
         flash('Thêm quy định thành công!', 'success')
         return redirect(url_for('.index'))
+
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.user_role in [UserRole.ADMIN, UserRole.QLKHO]
 
 
 

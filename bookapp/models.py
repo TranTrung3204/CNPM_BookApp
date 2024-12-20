@@ -14,6 +14,8 @@ class BaseModel(db.Model):
 class UserRole(UserEnum):
     ADMIN = 1
     USER = 2
+    QLKHO = 3
+    NHANVIEN = 4
 
 
 class User(BaseModel, UserMixin):

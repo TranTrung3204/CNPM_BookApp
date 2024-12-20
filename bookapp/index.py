@@ -116,17 +116,17 @@ def admin_login():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        # Kiểm tra đăng nhập
-        user = utils.check_login(username=username, password=password, user_role=UserRole.ADMIN)
+        # Kiểm tra đăng nhập với cả hai vai trò ADMIN và QLKHO
+        user = utils.check_login(username=username,
+                               password=password,
+                               user_role=[UserRole.ADMIN, UserRole.QLKHO])
 
         if user:
             login_user(user=user)  # Đăng nhập thành công
             return redirect('/admin')  # Chuyển hướng đến trang quản trị
-
         else:
-            flash('Đăng nhập không hợp lệ. Vui lòng kiểm tra lại thông tin.', 'error')  # Thông báo lỗi
-            return render_template('admin/index.html')  # Quay lại trang đăng nhập với thông báo lỗi
-
+            flash('Đăng nhập không hợp lệ. Vui lòng kiểm tra lại thông tin.', 'error')
+            return render_template('admin/index.html')
 
 
 @app.route("/user-logout")

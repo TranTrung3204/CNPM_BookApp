@@ -51,13 +51,21 @@ def load_book_categories():
     return categories
 
 
-def check_login(username, password, user_role=UserRole.USER):
+def check_login(username, password, user_role=None):
     if username and password:
         password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
+        query = User.query.filter(User.username.__eq__(username.strip()),
+                                  User.password.__eq__(password))
 
-        return User.query.filter(User.username.__eq__(username.strip()),
-                                 User.password.__eq__(password),
-                                 User.user_role.__eq__(user_role)).first()
+        if user_role:
+            if isinstance(user_role, list):
+                # Nếu user_role là list thì kiểm tra user có thuộc một trong các role đó không
+                query = query.filter(User.user_role.in_(user_role))
+            else:
+                # Nếu user_role là giá trị đơn lẻ
+                query = query.filter(User.user_role.__eq__(user_role))
+
+        return query.first()
 
 
 def get_user_by_id(user_id):
