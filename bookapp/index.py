@@ -107,16 +107,26 @@ def user_signin():
             err_msg = 'Username or password is incorrect !!!'
     return render_template('login.html', err_msg=err_msg)
 
-@app.route('/admin-login', methods=['post'])
+from flask import render_template, request, redirect, flash
+from flask_login import login_user
+
+@app.route('/admin-login', methods=['POST'])
 def admin_login():
-    if request.method.__eq__('POST'):
+    if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        user = utils.check_login(username=username, password=password, user_role=UserRole.ADMIN)
 
-    if user:
-        login_user(user=user)
-        return redirect('/admin')
+        # Kiểm tra đăng nhập với cả hai vai trò ADMIN và QLKHO
+        user = utils.check_login(username=username,
+                               password=password,
+                               user_role=[UserRole.ADMIN, UserRole.QLKHO])
+
+        if user:
+            login_user(user=user)  # Đăng nhập thành công
+            return redirect('/admin')  # Chuyển hướng đến trang quản trị
+        else:
+            flash('Đăng nhập không hợp lệ. Vui lòng kiểm tra lại thông tin.', 'error')
+            return render_template('admin/index.html')
 
 
 @app.route("/user-logout")
@@ -136,26 +146,34 @@ def cart():
 
 @app.route('/api/add-cart', methods=['post'])
 def add_to_cart():
+    # Kiểm tra xem người dùng đã đăng nhập chưa
+    if not current_user.is_authenticated:
+        return jsonify({
+            'code': 401,  # Mã trạng thái chưa được ủy quyền
+            'message': 'Vui lòng đăng nhập trước khi thêm sản phẩm vào giỏ hàng!'
+        })
+
     data = request.json
     id = str(data.get('id'))
     name = data.get('name')
-    price = float(data.get('price'))  # Ép kiểu thành float
+    price = float(data.get('price'))
 
     cart = session.get('cart', {})
     if not cart:
-        cart ={}
+        cart = {}
     if id in cart:
         cart[id]['quantity'] += 1
     else:
         cart[id] = {
             'id': id,
             'name': name,
-            'price': price,  # Giá là float
+            'price': price,
             'quantity': 1
         }
     session['cart'] = cart
 
     return jsonify(utils.count_cart(cart))
+
 
 
 @app.route('/api/update-cart', methods=['POST'])

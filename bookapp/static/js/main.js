@@ -43,6 +43,7 @@
         centerMode: true,
         variableWidth: true
     });
+
     
     
     // Product Slider 4 Column
