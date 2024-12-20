@@ -1746,3 +1746,95 @@ button.btn {
     } 
 }
 
+/* Category Dropdown Styles */
+.category-menu {
+    min-width: 250px;
+    padding: 0;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin-top: 10px;
+    background: #ffffff;
+}
+
+.category-header {
+    background: #3F69AA ;
+    padding: 12px;
+
+}
+
+.category-header h6 {
+    color: white;
+    margin: 0;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.category-list {
+    padding: 8px 0;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.category-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    color: #333;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.category-item:hover {
+    background-color: #f8f9fa;
+    border-left: 3px solid #3F69AA ;
+    color: #3F69AA ;
+    transform: translateX(5px);
+}
+
+.category-name {
+    font-weight: 500;
+}
+
+.category-count {
+    font-size: 0.9em;
+    color: #3F69AA ;
+    background: #f0f0f0;
+    padding: 2px 8px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.category-item:hover .category-count {
+    background: #3F69AA ;
+    color: white;
+}
+
+/* Scrollbar styling */
+.category-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.category-list::-webkit-scrollbar-track {
+    background: #3F69AA ;
+}
+
+.category-list::-webkit-scrollbar-thumb {
+    background: #3F69AA ;
+    border-radius: 3px;
+}
+
+.category-list::-webkit-scrollbar-thumb:hover {
+    background: #3F69AA ;
+}
+
+/* Dropdown arrow animation */
+.dropdown-toggle::after {
+    transition: transform 0.3s ease;
+}
+
+.dropdown.show .dropdown-toggle::after {
+    transform: rotate(-180deg);
+}

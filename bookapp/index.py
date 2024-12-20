@@ -39,6 +39,49 @@ def user_register():
     return render_template('register.html', err_msg=err_msg)
 
 
+@app.route("/user-login", methods=['get', 'post'])
+def user_signin():
+    err_msg = ""
+    if request.method.__eq__('POST'):
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = utils.check_login(username=username, password=password)
+        if user:
+            login_user(user=user)
+            return redirect(url_for('index'))
+        else:
+            err_msg = 'Username or password is incorrect !!!'
+    return render_template('login.html', err_msg=err_msg)
+
+
+@app.route('/admin-login', methods=['POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        # Kiểm tra đăng nhập với cả hai vai trò ADMIN và QLKHO
+        user = utils.check_login(username=username,
+                                 password=password,
+                                 user_role=[UserRole.ADMIN, UserRole.QLKHO])
+
+        if user:
+            login_user(user=user)  # Đăng nhập thành công
+            return redirect('/admin')  # Chuyển hướng đến trang quản trị
+        else:
+            flash('Đăng nhập không hợp lệ. Vui lòng kiểm tra lại thông tin.', 'error')
+            return render_template('admin/index.html')
+
+
+@app.route("/user-logout")
+def user_signout():
+    # Xóa giỏ hàng khỏi session trước khi đăng xuất
+    if 'cart' in session:
+        del session['cart']
+
+    logout_user()
+    return redirect(url_for('user_signin'))
+
 @login.user_loader
 def user_load(user_id):
     return utils.get_user_by_id(user_id=user_id)
@@ -92,47 +135,6 @@ def filter_by_category(category_id):
                            current_page=page if total_products > per_page else None,
                            total_pages=total_pages if total_products > per_page else None)
 
-
-@app.route("/user-login", methods=['get', 'post'])
-def user_signin():
-    err_msg = ""
-    if request.method.__eq__('POST'):
-        username = request.form.get('username')
-        password = request.form.get('password')
-        user = utils.check_login(username=username, password=password)
-        if user:
-            login_user(user=user)
-            return redirect(url_for('index'))
-        else:
-            err_msg = 'Username or password is incorrect !!!'
-    return render_template('login.html', err_msg=err_msg)
-
-from flask import render_template, request, redirect, flash
-from flask_login import login_user
-
-@app.route('/admin-login', methods=['POST'])
-def admin_login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-
-        # Kiểm tra đăng nhập với cả hai vai trò ADMIN và QLKHO
-        user = utils.check_login(username=username,
-                               password=password,
-                               user_role=[UserRole.ADMIN, UserRole.QLKHO])
-
-        if user:
-            login_user(user=user)  # Đăng nhập thành công
-            return redirect('/admin')  # Chuyển hướng đến trang quản trị
-        else:
-            flash('Đăng nhập không hợp lệ. Vui lòng kiểm tra lại thông tin.', 'error')
-            return render_template('admin/index.html')
-
-
-@app.route("/user-logout")
-def user_signout():
-    logout_user()
-    return redirect(url_for('user_signin'))
 
 
 @app.route('/cart')
