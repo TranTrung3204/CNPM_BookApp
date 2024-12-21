@@ -142,7 +142,7 @@ function formatPrice(price) {
 
 // Hàm thanh toán
 function pay() {
-    if (confirm('Do you want to pay?') == true) {
+    if (confirm('Bạn muốn thanh toán ?') == true) {
         fetch('/api/pay', { method: 'POST' })
             .then(function(res) {
                 return res.json();
@@ -157,3 +157,6 @@ function pay() {
             });
     }
 }
+
+// Phuong thuc thanh toan
+

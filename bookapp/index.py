@@ -239,6 +239,8 @@ def pay():
 
     return jsonify({'code': 200})
 
+
+
 @app.route('/product-list')
 def product_list():
     page = request.args.get('page', 1, type=int)  # Lấy số trang từ query string

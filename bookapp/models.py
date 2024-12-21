@@ -56,11 +56,28 @@ class Book(BaseModel):
     def __str__(self):
         return self.name
 
+class DeliveryMethod(UserEnum):
+    HOME = "home"  # Giao hàng tận nhà
+    STORE = "store"  # Nhận tại cửa hàng
+
+class PaymentMethod(UserEnum):
+    COD = "cod"  # Thanh toán khi nhận hàng
+    BANK = "bank"  # Thanh toán chuyển khoản
+    ONLINE = "online"  # Thanh toán trực tuyến
 
 class Receipt(BaseModel):
     created_date = Column(DateTime, default=datetime.now())
     user_id = Column(Integer, ForeignKey(User.id), nullable=False)
+    delivery_method = Column(Enum(DeliveryMethod), nullable=False)  # Phương thức nhận hàng
+    payment_method = Column(Enum(PaymentMethod), nullable=False)  # Phương thức thanh toán
+    delivery_address = Column(String(255), nullable=True)  # Địa chỉ giao hàng (nếu có)
+    phone = Column(String(15), nullable=False)  # Số điện thoại
+    email = Column(String(50), nullable=True)  # Email (tùy chọn)
     details = relationship('ReceiptDetail', backref='receipt', lazy=True)
+
+    def __str__(self):
+        return f"Receipt {self.id} - User {self.user_id}"
+
 
 
 class ReceiptDetail(db.Model):
