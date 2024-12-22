@@ -1,4 +1,4 @@
-from bookapp.models import BookCategory,Book,User,Receipt, ReceiptDetail,UserRole
+from bookapp.models import BookCategory, Book, User, Receipt, ReceiptDetail, UserRole, DeliveryMethod, PaymentMethod
 from bookapp import app, db
 from flask_login import  current_user
 import hashlib
@@ -85,12 +85,23 @@ def count_cart(cart):
     }
 
 
-def add_receipt(cart):
+def add_receipt(cart, delivery_method, payment_method, phone, email, delivery_address=None):
     if cart:
-        receipt = Receipt(user=current_user)
+        receipt = Receipt(
+            user=current_user,
+            delivery_method=DeliveryMethod[delivery_method.upper()],
+            payment_method=PaymentMethod[payment_method.upper()],
+            delivery_address=delivery_address,
+            phone=phone,
+            email=email
+        )
         db.session.add(receipt)
 
         for c in cart.values():
+            book = Book.query.get(c['id'])
+            if not book or book.stock < c['quantity']:
+                raise Exception(f"Sản phẩm {c['name']} không đủ số lượng trong kho!")
+
             d = ReceiptDetail(receipt=receipt,
                               product_id=c['id'],
                               quantity=c['quantity'],

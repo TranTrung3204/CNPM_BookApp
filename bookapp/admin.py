@@ -1,13 +1,12 @@
 from datetime import datetime
-from flask_admin import Admin
+from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from bookapp import db, app
-from bookapp.models import BookCategory, Book, UserRole, Regulation, BookImport, ImportEntry
+from bookapp.models import BookCategory, Book, UserRole, Regulation, ImportEntry
 from flask_admin import BaseView, expose
 from flask_login import current_user, logout_user, login_required
 from flask import redirect, flash, url_for, request
-
-admin = Admin(app=app, name="BookStore Management", template_mode="bootstrap4")
+import utils
 
 
 class AuthenticatedModelView(ModelView):
@@ -98,14 +97,13 @@ class BookImportView(BaseView):
                     book.stock += quantity
                     flash(f'Cập nhật số lượng sách "{book_name}" thành công!', 'success')
             else:
-                # Nếu sách chưa tồn tại, tạo mới sách và thêm vào kho
                 new_book = Book(
                     name=book_name,
-                    author=None,  # Có thể để trống hoặc gán giá trị mặc định
-                    description=None,  # Có thể để trống hoặc gán giá trị mặc định
+                    author=None,
+                    description=None,
                     price=unit_price,
                     stock=quantity,
-                    category_id=category.id,  # Liên kết thể loại
+                    category_id=category.id,
                     created_date=import_date
                 )
                 db.session.add(new_book)
@@ -113,11 +111,9 @@ class BookImportView(BaseView):
 
             # Lập phiếu nhập sách
             self.create_import_entry(book_name, quantity, unit_price, import_date)
-
-            # Commit thay đổi vào cơ sở dữ liệu
             db.session.commit()
         except Exception as e:
-            db.session.rollback()  # Hoàn tác thay đổi trong trường hợp lỗi
+            db.session.rollback()  # Hoàn tác các thay đổi nếu err
             flash(f'Đã xảy ra lỗi: {str(e)}', 'error')
 
         return redirect(url_for('.index'))
@@ -166,12 +162,17 @@ class BookImportView(BaseView):
 
     def create_import_entry(self, book_name, quantity, unit_price, import_date):
         try:
-            # Kiểm tra nếu book_name không phải là None
             if not book_name:
                 raise ValueError("Tên sách không thể rỗng")
 
-            # Thêm dữ liệu vào bảng import_entries
+            # Lấy book_id từ bảng Book
+            book = Book.query.filter_by(name=book_name).first()
+            if not book:
+                raise ValueError("Không tìm thấy sách trong hệ thống")
+
+            # Thêm dữ liệu vào bảng import_entries với book_id
             import_entry = ImportEntry(
+                book_id=book.id,
                 book_name=book_name,
                 quantity=quantity,
                 unit_price=unit_price,
@@ -180,7 +181,7 @@ class BookImportView(BaseView):
             db.session.add(import_entry)
             db.session.commit()
         except Exception as e:
-            db.session.rollback()  # Hoàn tác nếu có lỗi
+            db.session.rollback()
             flash(f'Đã xảy ra lỗi khi tạo phiếu nhập: {str(e)}', 'error')
 
     def is_accessible(self):
@@ -263,6 +264,10 @@ class RegulationView(BaseView):
         return current_user.is_authenticated and current_user.user_role in [UserRole.ADMIN, UserRole.QLKHO]
 
 
+
+admin = Admin(app=app, name="BookStore Management",
+              template_mode="bootstrap4",
+              )
 
 
 admin.add_view(BookCategoryView(BookCategory, db.session))

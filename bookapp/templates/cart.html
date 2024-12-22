@@ -1,6 +1,10 @@
 {% extends 'layout/base.html' %}
-{% block title %} Your Cart {% endblock %}
-
+{% block title %} Giỏ hàng {% endblock %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% block css %}
+<link href="{{ url_for('static', filename='css/cart.css') }}" rel="stylesheet">
+{% endblock %}
 {% block content %}
 <!-- Cart Start -->
 <div class="cart-page">
@@ -21,28 +25,35 @@
                         </thead>
                         <tbody class="align-middle">
                         {% for c in session.get('cart', {}).values() %}
-                        <tr>
+                        <tr id="product-{{ c.get('id', '') }}">
                             <td><a href="#">{{ c.get('id', '') }}</a></td>
                             <td><a href="#">{{ c.get('name', '') }}</a></td>
                             <td>
                                 <div class="qty">
-                                    <button class="btn-minus"><i class="fa fa-minus"></i></button>
-                                    <input type="text" value="{{ c.get('quantity', 0) }}">
-                                    <button class="btn-plus"><i class="fa fa-plus"></i></button>
+                                    <button class="btn-minus" onclick="updateQuantity('{{ c.get('id', '') }}', -1)">
+                                        <i class="fa fa-minus"></i>
+                                    </button>
+                                    <input type="text" id="quantity-{{ c.get('id', '') }}"
+                                           value="{{ c.get('quantity', 0) }}" readonly>
+                                    <button class="btn-plus" onclick="updateQuantity('{{ c.get('id', '') }}', 1)">
+                                        <i class="fa fa-plus"></i>
+                                    </button>
                                 </div>
                             </td>
-                            <td>
+                            <td id="total-{{ c.get('id', '') }}">
                                 {{ "{:,.1f}".format((c.get('price', 0) or 0) * (c.get('quantity', 0) or 1)) }} VND
                             </td>
                             <td>
-                                <button><i class="fa fa-trash"></i></button>
+                                <button onclick="deleteFromCart('{{ c.get('id', '') }}')">
+                                    <i class="fa fa-trash"></i>
+                                </button>
                             </td>
                         </tr>
                         {% endfor %}
                         </tbody>
                     </table>
                     {% else %}
-                        <h4>Not found product in cart !</h4>
+                    <h4>Không có sản phẩm nào trong giỏ !</h4>
                     {% endif %}
                 </div>
             </div>
@@ -67,6 +78,88 @@
                         <button onclick="pay()">Thanh toán</button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="deliveryMethodModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Chọn phương thức nhận hàng</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="delivery-options">
+                    <button class="btn btn-primary delivery-option" data-method="home">Giao hàng tận nhà</button>
+                    <button class="btn btn-primary delivery-option" data-method="store">Nhận tại cửa hàng</button>
+                </div>
+
+                <!-- Form giao hàng tận nhà -->
+                <form id="homeDeliveryForm" class="delivery-form" style="display: none;">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Tỉnh/thành phố" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Quận/huyện" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Xã/phường" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Địa chỉ cụ thể" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="tel" class="form-control" placeholder="Số điện thoại" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" class="form-control" placeholder="Email">
+                    </div>
+                    <div class="form-group">
+                        <label>Phương thức thanh toán:</label>
+                        <div class="payment-options">
+                            <div class="custom-control custom-radio">
+                                <input type="radio" class="custom-control-input" id="homeOnline" name="homePayment"
+                                       value="online">
+                                <label class="custom-control-label" for="homeOnline">Thanh toán trực tuyến</label>
+                            </div>
+                            <div class="custom-control custom-radio">
+                                <input type="radio" class="custom-control-input" id="homeCOD" name="homePayment"
+                                       value="cod">
+                                <label class="custom-control-label" for="homeCOD">Thanh toán khi nhận hàng</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Form nhận tại cửa hàng -->
+                <form id="storePickupForm" class="delivery-form" style="display: none;">
+                    <div class="form-group">
+                        <input type="tel" class="form-control" placeholder="Số điện thoại" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" class="form-control" placeholder="Email">
+                    </div>
+                    <div class="form-group">
+                        <label>Phương thức thanh toán:</label>
+                        <div class="payment-options">
+                            <div class="custom-control custom-radio">
+                                <input type="radio" class="custom-control-input" id="storeOnline" name="storePayment"
+                                       value="online">
+                                <label class="custom-control-label" for="storeOnline">Thanh toán trực tuyến</label>
+                            </div>
+                            <div class="custom-control custom-radio">
+                                <input type="radio" class="custom-control-input" id="storeCOD" name="storePayment"
+                                       value="cod">
+                                <label class="custom-control-label" for="storeCOD">Thanh toán khi nhận hàng</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="confirmDelivery">Xác nhận</button>
             </div>
         </div>
     </div>

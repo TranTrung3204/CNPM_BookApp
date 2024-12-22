@@ -62,7 +62,6 @@ class DeliveryMethod(UserEnum):
 
 class PaymentMethod(UserEnum):
     COD = "cod"  # Thanh toán khi nhận hàng
-    BANK = "bank"  # Thanh toán chuyển khoản
     ONLINE = "online"  # Thanh toán trực tuyến
 
 class Receipt(BaseModel):
@@ -86,27 +85,16 @@ class ReceiptDetail(db.Model):
     quantity = Column(Integer, default=0)
     unit_price = Column(Float, default=0)
 
-class BookImport(BaseModel):
-    __tablename__ = 'book_imports'
-    book_id = Column(Integer, ForeignKey('book.id'), nullable=False)
-    quantity = Column(Integer, nullable=False)  # Số lượng nhập
-    unit_price = Column(Float, nullable=False)  # Đơn giá
-    import_date = Column(DateTime, default=datetime.now)  # Ngày nhập
-
-    book = relationship('Book', backref='imports')  # Quan hệ với bảng Book
-
-    def __init__(self, book_id, quantity, unit_price, import_date):
-        self.book_id = book_id
-        self.quantity = quantity
-        self.unit_price = unit_price
-        self.import_date = import_date
-
 class ImportEntry(BaseModel):
     __tablename__ = 'import_entries'
-    book_name = db.Column(db.String(255), nullable=False)
-    quantity = db.Column(db.Integer, nullable=False)
-    unit_price = db.Column(db.Float, nullable=False)
-    import_date = db.Column(db.Date, nullable=False)
+    book_id = Column(Integer, ForeignKey('book.id'), nullable=False)  # Thêm liên kết với Book
+    book_name = Column(String(255), nullable=False)
+    quantity = Column(Integer, nullable=False)
+    unit_price = Column(Float, nullable=False)
+    import_date = Column(DateTime, default=datetime.now)
+
+    # Thêm relationship với Book
+    book = relationship('Book', backref='import_entries', lazy=True)
 
     def __repr__(self):
         return f'<ImportEntry {self.book_name} - {self.quantity}>'
@@ -114,9 +102,9 @@ class ImportEntry(BaseModel):
 
 class Regulation(BaseModel):
     __tablename__ = 'regulations'
-    name = Column(String(100), nullable=False)  # Tên quy định
-    value = Column(Float, nullable=False)  # Giá trị của quy định (e.g., số lượng tối thiểu)
-    is_active = Column(Boolean, default=True)  # Tình trạng hoạt động (có hiệu lực hay không)
+    name = Column(String(100), nullable=False)
+    value = Column(Float, nullable=False)
+    is_active = Column(Boolean, default=True)
 
 if __name__ == '__main__':
     with app.app_context():

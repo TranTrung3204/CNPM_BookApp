@@ -39,17 +39,19 @@
                             <div class="product-image">
                                 <a href="#">
                                     <img src="{{ url_for('static', filename=(product.image if product.image else product.name)) }}"
-                                 style=" padding: 5px;" class="img-fluid">
+                                         style=" padding: 5px;" class="img-fluid">
                                 </a>
                             </div>
                             <div class="product-content text-center">
                                 <h4>{{ product.name }}</h4>
                                 <p>{{ product.author }}</p>
                                 <p>{{ "{:,.0f}".format(product.price) }} VND</p>
+                                <p>Còn lại: {{ product.stock }} sản phẩm</p>
                                 <a href="#" class="btn btn-primary add-to-cart"
                                    data-id="{{ product.id }}"
                                    data-name="{{ product.name }}"
-                                   data-price="{{ product.price }}">
+                                   data-price="{{ product.price }}"
+                                   data-stock="{{ product.stock }}">
                                     <i class="fa fa-cart-plus"></i> Thêm vào giỏ
                                 </a>
                             </div>
@@ -115,7 +117,8 @@
                         <ul>
                             {% for category in categories %}
                             <li>
-                                <a href="{{ url_for('filter_by_category', category_id=category.id) }}">{{ category.name }}</a>
+                                <a href="{{ url_for('filter_by_category', category_id=category.id) }}">{{ category.name
+                                    }}</a>
                                 <span>({{ category.product_count }})</span>
                             </li>
                             {% endfor %}

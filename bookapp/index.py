@@ -146,12 +146,12 @@ def cart():
                            err_msg=err_msg,
                            stats=utils.count_cart(session.get('cart')))
 
+
 @app.route('/api/add-cart', methods=['post'])
 def add_to_cart():
-    # Kiểm tra xem người dùng đã đăng nhập chưa
     if not current_user.is_authenticated:
         return jsonify({
-            'code': 401,  # Mã trạng thái chưa được ủy quyền
+            'code': 401,
             'message': 'Vui lòng đăng nhập trước khi thêm sản phẩm vào giỏ hàng!'
         })
 
@@ -160,9 +160,26 @@ def add_to_cart():
     name = data.get('name')
     price = float(data.get('price'))
 
+    # Kiểm tra số lượng trong kho
+    book = Book.query.get(id)
+    if not book:
+        return jsonify({
+            'code': 404,
+            'message': 'Sản phẩm không tồn tại!'
+        })
+
     cart = session.get('cart', {})
-    if not cart:
-        cart = {}
+
+    # Tính tổng số lượng hiện có trong giỏ
+    current_quantity = cart[id]['quantity'] if id in cart else 0
+
+    # Kiểm tra nếu thêm 1 sản phẩm nữa có vượt quá số lượng trong kho không
+    if current_quantity + 1 > book.stock:
+        return jsonify({
+            'code': 400,
+            'message': 'Số lượng sản phẩm trong kho không đủ!'
+        })
+
     if id in cart:
         cart[id]['quantity'] += 1
     else:
@@ -172,10 +189,12 @@ def add_to_cart():
             'price': price,
             'quantity': 1
         }
+
     session['cart'] = cart
-
-    return jsonify(utils.count_cart(cart))
-
+    return jsonify({
+        'code': 200,
+        'data': utils.count_cart(cart)
+    })
 
 
 @app.route('/api/update-cart', methods=['POST'])
@@ -186,8 +205,26 @@ def update_cart():
 
     cart = session.get('cart', {})
 
+    # Kiểm tra số lượng trong kho
+    book = Book.query.get(product_id)
+    if not book:
+        return jsonify({
+            'code': 404,
+            'message': 'Sản phẩm không tồn tại!'
+        })
+
     if product_id in cart:
         new_quantity = cart[product_id]['quantity'] + change
+
+        # Kiểm tra nếu số lượng mới vượt quá stock
+        if new_quantity > book.stock:
+            return jsonify({
+                'code': 400,
+                'message': 'Số lượng sản phẩm trong kho không đủ!',
+                'available_stock': book.stock,
+                'current_quantity': cart[product_id]['quantity']
+            })
+
         if new_quantity > 0:
             cart[product_id]['quantity'] = new_quantity
         else:
@@ -198,12 +235,12 @@ def update_cart():
     updated_total = cart[product_id]['quantity'] * cart[product_id]['price'] if product_id in cart else 0
 
     return jsonify({
+        'code': 200,
         'updated_quantity': cart[product_id]['quantity'] if product_id in cart else 0,
         'updated_total': updated_total,
         'cart_total_quantity': cart_stats['total_quantity'],
         'cart_total_price': cart_stats['total_amount']
     })
-
 
 @app.route('/api/delete-cart', methods=['POST'])
 def delete_cart():
@@ -232,14 +269,45 @@ def delete_cart():
 @app.route('/api/pay', methods=['post'])
 def pay():
     try:
-        utils.add_receipt(session.get('cart'))
+        cart = session.get('cart')
+        if not cart:
+            return jsonify({'code': 400, 'error': 'Giỏ hàng trống!'})
+
+        # Kiểm tra số lượng trong kho trước khi thanh toán
+        for item in cart.values():
+            book = Book.query.get(item['id'])
+            if not book:
+                return jsonify({'code': 400, 'error': f'Sản phẩm {item["name"]} không tồn tại!'})
+
+            if book.stock < item['quantity']:
+                return jsonify({
+                    'code': 400,
+                    'error': f'Sản phẩm {item["name"]} chỉ còn {book.stock} trong kho!'
+                })
+
+        data = request.json
+        utils.add_receipt(
+            cart=cart,
+            delivery_method=data.get('delivery_method'),
+            payment_method=data.get('payment_method'),
+            delivery_address=data.get('delivery_address'),
+            phone=data.get('phone'),
+            email=data.get('email')
+        )
+
+        # Cập nhật số lượng trong kho
+        for item in cart.values():
+            book = Book.query.get(item['id'])
+            book.stock -= item['quantity']
+
+        db.session.commit()
         del session['cart']
-    except:
-        return jsonify({'code': 400})
+        return jsonify({'code': 200})
 
-    return jsonify({'code': 200})
-
-
+    except Exception as e:
+        db.session.rollback()
+        print(str(e))
+        return jsonify({'code': 400, 'error': str(e)})
 
 @app.route('/product-list')
 def product_list():
