@@ -268,12 +268,11 @@ def delete_cart():
 @app.route('/api/pay', methods=['post'])
 def pay():
     try:
-        data = request.json
-        cart = data.get('cart')
+        cart = session.get('cart')
         if not cart:
             return jsonify({'code': 400, 'error': 'Giỏ hàng trống!'})
 
-        # Kiểm tra số lượng trong kho cho các sản phẩm được chọn
+        # Kiểm tra số lượng trong kho trước khi thanh toán
         for item in cart.values():
             book = Book.query.get(item['id'])
             if not book:
@@ -285,6 +284,7 @@ def pay():
                     'error': f'Sản phẩm {item["name"]} chỉ còn {book.stock} trong kho!'
                 })
 
+        data = request.json
         utils.add_receipt(
             cart=cart,
             delivery_method=data.get('delivery_method'),
@@ -294,20 +294,13 @@ def pay():
             email=data.get('email')
         )
 
-        # Cập nhật số lượng trong kho chỉ cho các sản phẩm được chọn
+        # Cập nhật số lượng trong kho
         for item in cart.values():
             book = Book.query.get(item['id'])
             book.stock -= item['quantity']
 
         db.session.commit()
-
-        # Xóa các sản phẩm đã thanh toán khỏi giỏ hàng
-        session_cart = session.get('cart', {})
-        for product_id in cart.keys():
-            if product_id in session_cart:
-                del session_cart[product_id]
-        session['cart'] = session_cart
-
+        del session['cart']
         return jsonify({'code': 200})
 
     except Exception as e:
