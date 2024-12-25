@@ -60,17 +60,16 @@ def admin_login():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        # Kiểm tra đăng nhập với cả hai vai trò ADMIN và QLKHO
         user = utils.check_login(username=username,
-                                 password=password,
-                                 user_role=[UserRole.ADMIN, UserRole.QLKHO])
+                               password=password,
+                               user_role=[UserRole.ADMIN, UserRole.QLKHO])
 
         if user:
-            login_user(user=user)  # Đăng nhập thành công
-            return redirect('/admin')  # Chuyển hướng đến trang quản trị
+            login_user(user=user)
+            return redirect('/admin')  # Chuyển hướng về trang admin
         else:
             flash('Đăng nhập không hợp lệ. Vui lòng kiểm tra lại thông tin.', 'error')
-            return render_template('admin/index.html')
+            return redirect('/admin')  # Quay lại trang login khi đăng nhập thất bại
 
 
 @app.route("/user-logout")
@@ -269,11 +268,12 @@ def delete_cart():
 @app.route('/api/pay', methods=['post'])
 def pay():
     try:
-        cart = session.get('cart')
+        data = request.json
+        cart = data.get('cart')
         if not cart:
             return jsonify({'code': 400, 'error': 'Giỏ hàng trống!'})
 
-        # Kiểm tra số lượng trong kho trước khi thanh toán
+        # Kiểm tra số lượng trong kho cho các sản phẩm được chọn
         for item in cart.values():
             book = Book.query.get(item['id'])
             if not book:
@@ -285,7 +285,6 @@ def pay():
                     'error': f'Sản phẩm {item["name"]} chỉ còn {book.stock} trong kho!'
                 })
 
-        data = request.json
         utils.add_receipt(
             cart=cart,
             delivery_method=data.get('delivery_method'),
@@ -295,13 +294,20 @@ def pay():
             email=data.get('email')
         )
 
-        # Cập nhật số lượng trong kho
+        # Cập nhật số lượng trong kho chỉ cho các sản phẩm được chọn
         for item in cart.values():
             book = Book.query.get(item['id'])
             book.stock -= item['quantity']
 
         db.session.commit()
-        del session['cart']
+
+        # Xóa các sản phẩm đã thanh toán khỏi giỏ hàng
+        session_cart = session.get('cart', {})
+        for product_id in cart.keys():
+            if product_id in session_cart:
+                del session_cart[product_id]
+        session['cart'] = session_cart
+
         return jsonify({'code': 200})
 
     except Exception as e:

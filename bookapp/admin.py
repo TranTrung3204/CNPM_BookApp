@@ -5,7 +5,7 @@ from bookapp import db, app
 from bookapp.models import BookCategory, Book, UserRole, Regulation, ImportEntry
 from flask_admin import BaseView, expose
 from flask_login import current_user, logout_user, login_required
-from flask import redirect, flash, url_for, request
+from flask import redirect, flash, url_for, request, render_template
 import utils
 
 
@@ -263,15 +263,22 @@ class RegulationView(BaseView):
     def is_accessible(self):
         return current_user.is_authenticated and current_user.user_role in [UserRole.ADMIN, UserRole.QLKHO]
 
+class MyAdminIndexView(AdminIndexView):
+    @expose('/')
+    def index(self):
+        if not current_user.is_authenticated:
+            return render_template('admin/login.html')
+        return super(MyAdminIndexView, self).index()
 
-
-admin = Admin(app=app, name="BookStore Management",
-              template_mode="bootstrap4",
-              )
+# Khởi tạo Admin với view tùy chỉnh
+admin = Admin(app=app,
+             name="BookStore Management",
+             template_mode="bootstrap4",
+             index_view=MyAdminIndexView())
 
 
 admin.add_view(BookCategoryView(BookCategory, db.session))
 admin.add_view(BookView(Book, db.session))
 admin.add_view(BookImportView(name='Lập Phiếu Nhập Sách', endpoint='bookimportview'))
 admin.add_view(RegulationView(name='Thay Đổi Quy Định', endpoint='regulationview'))
-admin.add_view(LogoutView(name='Log out'))
+admin.add_view(LogoutView(name='Đăng xuất'))

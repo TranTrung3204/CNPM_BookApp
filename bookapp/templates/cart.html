@@ -14,8 +14,12 @@
                 <div class="table-responsive">
                     {% if session.get('cart') %}
                     <table class="table table-bordered">
+                        <!-- Update the table header to include checkbox column -->
                         <thead class="thead-dark">
                         <tr>
+                            <th>
+                                <input type="checkbox" id="selectAll" onclick="toggleAllProducts()">
+                            </th>
                             <th>ID Product</th>
                             <th>Name</th>
                             <th>Quantity</th>
@@ -26,6 +30,13 @@
                         <tbody class="align-middle">
                         {% for c in session.get('cart', {}).values() %}
                         <tr id="product-{{ c.get('id', '') }}">
+                            <td>
+                                <input type="checkbox" class="product-select"
+                                       data-id="{{ c.get('id', '') }}"
+                                       data-price="{{ c.get('price', 0) }}"
+                                       data-quantity="{{ c.get('quantity', 0) }}"
+                                       onchange="updateSelectedTotal()">
+                            </td>
                             <td><a href="#">{{ c.get('id', '') }}</a></td>
                             <td><a href="#">{{ c.get('name', '') }}</a></td>
                             <td>

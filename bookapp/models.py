@@ -57,12 +57,12 @@ class Book(BaseModel):
         return self.name
 
 class DeliveryMethod(UserEnum):
-    HOME = "home"  # Giao hàng tận nhà
-    STORE = "store"  # Nhận tại cửa hàng
+    HOME = "home"
+    STORE = "store"
 
 class PaymentMethod(UserEnum):
-    COD = "cod"  # Thanh toán khi nhận hàng
-    ONLINE = "online"  # Thanh toán trực tuyến
+    COD = "cod"
+    ONLINE = "online"
 
 class Receipt(BaseModel):
     created_date = Column(DateTime, default=datetime.now())
