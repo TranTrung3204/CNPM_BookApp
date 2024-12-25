@@ -1,7 +1,7 @@
 from datetime import datetime
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
-from bookapp import db, app
+from bookapp import db, app, utils
 from bookapp.models import BookCategory, Book, UserRole, Regulation, BookImport, ImportEntry
 from flask_admin import BaseView, expose
 from flask_login import current_user, logout_user, login_required
@@ -261,7 +261,6 @@ class RegulationView(BaseView):
 
     def is_accessible(self):
         return current_user.is_authenticated and current_user.user_role in [UserRole.ADMIN, UserRole.QLKHO]
-
 
 
 

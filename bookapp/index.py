@@ -1,10 +1,23 @@
 from flask import render_template, Flask, flash
 from flask import request, redirect, url_for, session, jsonify
-from flask_login import login_user, logout_user
+from flask_login import login_user, logout_user, LoginManager, login_required
 import cloudinary.uploader
 from bookapp import app, utils,login
 from bookapp.models import UserRole,Book,BookCategory
 from math import ceil
+
+# Cấu hình LoginManager
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'user_signin'  # Trang đăng nhập nếu chưa đăng nhập
+
+@app.route('/contact')
+def contact():
+    return render_template('layout/contact.html')
+
+@login_manager.user_loader
+def user_load(user_id):
+    return utils.get_user_by_id(user_id=user_id)# Decorator để kiể
 
 @app.route("/")
 def index():
@@ -276,7 +289,20 @@ def common_response():
         'cart_stats': utils.count_cart(session.get('cart',{}))
     }
 
-
+@app.route('/submit_contact_form', methods=['POST'])
+@login_required
+def submit_contact_form():
+    try:
+        name = request.form['name']
+        email = request.form['email']
+        message = request.form['message']
+        # Thêm logic để xử lý dữ liệu từ biểu mẫu, ví dụ: gửi email hoặc lưu vào cơ sở dữ liệu
+        flash('Gửi biểu mẫu thành công!', 'success')
+        return jsonify({'message': 'Gửi biểu mẫu thành công!'}), 200
+    except Exception as e:
+        # Ghi log lỗi để kiểm tra sau
+        app.logger.error(f"Error submitting contact form: {e}")
+        return jsonify({'error': 'Đã xảy ra lỗi khi gửi biểu mẫu. Vui lòng thử lại sau.'}), 500
 
 if __name__ == '__main__':
     from bookapp.admin import *

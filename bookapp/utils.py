@@ -1,3 +1,5 @@
+from sqlalchemy import extract, func
+
 from bookapp.models import BookCategory,Book,User,Receipt, ReceiptDetail,UserRole
 from bookapp import app, db
 from flask_login import  current_user
@@ -98,3 +100,4 @@ def add_receipt(cart):
             db.session.add(d)
 
         db.session.commit()
+
