@@ -1,3 +1,5 @@
+from sqlalchemy import func
+
 from bookapp.models import BookCategory, Book, User, Receipt, ReceiptDetail, UserRole, DeliveryMethod, PaymentMethod
 from bookapp import app, db
 from flask_login import  current_user
@@ -96,16 +98,48 @@ def add_receipt(cart, delivery_method, payment_method, phone, email, delivery_ad
             email=email
         )
         db.session.add(receipt)
-
         for c in cart.values():
             book = Book.query.get(c['id'])
             if not book or book.stock < c['quantity']:
                 raise Exception(f"Sản phẩm {c['name']} không đủ số lượng trong kho!")
-
             d = ReceiptDetail(receipt=receipt,
                               product_id=c['id'],
                               quantity=c['quantity'],
                               unit_price=c['price'])
             db.session.add(d)
-
         db.session.commit()
+
+def stats_by_category(month, year):
+    """Thống kê doanh thu theo thể loại sách trong tháng của năm"""
+    return db.session.query(
+        BookCategory.name,
+        func.sum(ReceiptDetail.quantity * ReceiptDetail.unit_price),
+        func.count(ReceiptDetail.product_id),
+        func.round(
+            (func.sum(ReceiptDetail.quantity * ReceiptDetail.unit_price) * 100.0 /
+             func.sum(func.sum(ReceiptDetail.quantity * ReceiptDetail.unit_price)).over()),2
+        )
+    ).join(Book, ReceiptDetail.product_id == Book.id
+    ).join(BookCategory, Book.category_id == BookCategory.id
+    ).join(Receipt, ReceiptDetail.receipt_id == Receipt.id
+    ).filter(
+        func.extract('month', Receipt.created_date) == month,
+        func.extract('year', Receipt.created_date) == year
+    ).group_by(BookCategory.name).all()
+
+def stats_book_sold(month, year):
+    """Thống kê tần suất sách bán trong tháng của năm"""
+    return db.session.query(
+        Book.name,
+        BookCategory.name,
+        func.sum(ReceiptDetail.quantity),
+        func.round((func.sum(ReceiptDetail.quantity) * 100.0 /
+             func.sum(func.sum(ReceiptDetail.quantity)).over()),2
+        )
+    ).join(ReceiptDetail, ReceiptDetail.product_id == Book.id
+    ).join(BookCategory, Book.category_id == BookCategory.id
+    ).join(Receipt, ReceiptDetail.receipt_id == Receipt.id
+    ).filter(
+        func.extract('month', Receipt.created_date) == month,
+        func.extract('year', Receipt.created_date) == year
+    ).group_by(Book.name,BookCategory.name).all()

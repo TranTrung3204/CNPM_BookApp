@@ -1,0 +1,215 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <form method="GET" class="form-inline justify-content-center">
+                <div class="form-group mx-sm-3 d-flex align-items-center">
+                    <label for="year" class="mr-2">Năm:</label>
+                    <select class="form-control mr-4" id="year" name="year">
+                        {% for y in years %}
+                        <option value="{{ y }}" {% if y==year %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <label for="month" class="mr-2 ml-4">Tháng:</label>
+                    <select class="form-control" id="month" name="month">
+                        {% for i in range(1, 13) %}
+                        <option value="{{ i }}" {% if i==month %}selected{% endif %}>Tháng {{ i }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <button type="submit" class="btn btn-primary ml-3">Xem báo cáo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col text-center">
+            <button class="btn btn-primary mx-2" onclick="showReport('revenue')">Báo Cáo Doanh Thu</button>
+            <button class="btn btn-secondary mx-2" onclick="showReport('frequency')">Báo Cáo Tần Suất</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Báo cáo doanh thu -->
+        <div class="col-5" id="tableSection">
+            <div id="revenueReport" class="card mb-4" style="display: none;">
+                <div class="card-header text-center">
+                    <h3>BÁO CÁO DOANH THU THEO THÁNG</h3>
+                    <h4>Tháng {{ month }}/{{ year }}</h4>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered table-striped">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>STT</th>
+                                <th>Thể loại sách</th>
+                                <th>Doanh thu</th>
+                                <th>Số lượt thuê</th>
+                                <th>Tỷ lệ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in revenue_stats %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ stat[0] }}</td>
+                                <td>{{ "{:,.0f}".format(stat[1]) }} VNĐ</td>
+                                <td>{{ stat[2] }}</td>
+                                <td>{{ stat[3] }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-info">
+                                <td colspan="2"><strong>Tổng doanh thu:</strong></td>
+                                <td colspan="3"><strong>{{ "{:,.0f}".format(total_revenue) }} VNĐ</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div id="frequencyReport" class="card" style="display: none;">
+                <div class="card-header text-center">
+                    <h3>BÁO CÁO TẦN SUẤT SÁCH BÁN</h3>
+                    <h4>Tháng {{ month }}/{{ year }}</h4>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered table-striped">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên sách</th>
+                                <th>Thể loại</th>
+                                <th>Số lượng</th>
+                                <th>Tỷ lệ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in book_stats %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ stat[0] }}</td>
+                                <td>{{ stat[1] }}</td>
+                                <td>{{ stat[2] }}</td>
+                                <td>{{ stat[3] }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Biểu đồ -->
+        <div class="col-7">
+            <div class="card">
+                <div class="card-body">
+                    <canvas id="statsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+let currentChart = null;
+
+const revenueData = {
+    labels: [{% for stat in revenue_stats %}'{{ stat[0] }}',{% endfor %}],
+    datasets: [{
+        label: 'Doanh thu (VNĐ)',
+        data: [{% for stat in revenue_stats %}{{ stat[1] }},{% endfor %}],
+        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+    }]
+};
+
+const frequencyData = {
+    labels: [{% for stat in book_stats %}'{{ stat[0] }}',{% endfor %}],
+    datasets: [{
+        label: 'Số lượng bán',
+        data: [{% for stat in book_stats %}{{ stat[2] }},{% endfor %}],
+        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderWidth: 1
+    }]
+};
+
+const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+        y: {
+            beginAtZero: true
+        }
+    }
+};
+
+function showReport(type) {
+    document.getElementById('revenueReport').style.display = 'none';
+    document.getElementById('frequencyReport').style.display = 'none';
+
+    if (type === 'revenue') {
+        document.getElementById('revenueReport').style.display = 'block';
+        updateChart('revenue');
+    } else {
+        document.getElementById('frequencyReport').style.display = 'block';
+        updateChart('frequency');
+    }
+}
+
+function updateChart(type) {
+    if (currentChart) {
+        currentChart.destroy();
+    }
+
+    const ctx = document.getElementById('statsChart');
+    currentChart = new Chart(ctx, {
+        type: 'bar',
+        data: type === 'revenue' ? revenueData : frequencyData,
+        options: chartOptions
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    showReport('revenue');
+});
+</script>
+
+<style>
+    .card {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        margin-bottom: 1rem;
+    }
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+    .table th {
+        background-color: #f8f9fa;
+    }
+    .btn {
+        padding: 0.5rem 2rem;
+    }
+    .btn-primary:focus, .btn-secondary:focus {
+        box-shadow: none;
+    }
+    canvas {
+        min-height: 400px;
+    }
+    .form-inline {
+        justify-content: center;
+    }
+    .form-group {
+        margin: 0;
+    }
+</style>
+{% endblock %}

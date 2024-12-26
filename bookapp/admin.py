@@ -270,6 +270,32 @@ class MyAdminIndexView(AdminIndexView):
             return render_template('admin/login.html')
         return super(MyAdminIndexView, self).index()
 
+
+class StatsView(BaseView):
+    @expose('/')
+    def index(self):
+        # Lấy năm và tháng từ query parameter, mặc định là năm và tháng hiện tại
+        current_date = datetime.now()
+        year = request.args.get('year', current_date.year, type=int)
+        month = request.args.get('month', current_date.month, type=int)
+
+        # Cập nhật thống kê để xem xét cả năm
+        revenue_stats = utils.stats_by_category(month, year)
+        book_stats = utils.stats_book_sold(month, year)
+
+        total_revenue = sum(stat[1] for stat in revenue_stats) if revenue_stats else 0
+
+        # Tạo danh sách năm từ 2020 đến năm hiện tại
+        years = range(2020, current_date.year + 1)
+
+        return self.render('admin/stats.html',
+                        year=year,
+                        month=month,
+                        years=years,
+                        revenue_stats=revenue_stats,
+                        book_stats=book_stats,
+                        total_revenue=total_revenue)
+
 # Khởi tạo Admin với view tùy chỉnh
 admin = Admin(app=app,
              name="BookStore Management",
@@ -281,4 +307,5 @@ admin.add_view(BookCategoryView(BookCategory, db.session))
 admin.add_view(BookView(Book, db.session))
 admin.add_view(BookImportView(name='Lập Phiếu Nhập Sách', endpoint='bookimportview'))
 admin.add_view(RegulationView(name='Thay Đổi Quy Định', endpoint='regulationview'))
+admin.add_view(StatsView(name='Thống Kê - Báo Cáo', endpoint='statsview'))
 admin.add_view(LogoutView(name='Đăng xuất'))

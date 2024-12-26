@@ -20,11 +20,11 @@
                             <th>
                                 <input type="checkbox" id="selectAll" onclick="toggleAllProducts()">
                             </th>
-                            <th>ID Product</th>
-                            <th>Name</th>
-                            <th>Quantity</th>
-                            <th>Total</th>
-                            <th>Remove</th>
+                            <th>Mã sản phẩm</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Số lượng</th>
+                            <th>Tổng tiền</th>
+                            <th>Xóa</th>
                         </tr>
                         </thead>
                         <tbody class="align-middle">
@@ -32,9 +32,6 @@
                         <tr id="product-{{ c.get('id', '') }}">
                             <td>
                                 <input type="checkbox" class="product-select"
-                                       data-id="{{ c.get('id', '') }}"
-                                       data-price="{{ c.get('price', 0) }}"
-                                       data-quantity="{{ c.get('quantity', 0) }}"
                                        onchange="updateSelectedTotal()">
                             </td>
                             <td><a href="#">{{ c.get('id', '') }}</a></td>
@@ -79,10 +76,10 @@
             <div class="col-md-6">
                 <div class="cart-summary">
                     <div class="cart-content">
-                        <h3>Cart Summary</h3>
-                        <p>Total Products<span>{{ stats.total_quantity }}</span></p>
-                        <p>Shipping Cost<span>0</span></p>
-                        <h4>Total Price<span>{{ "{:,.1f}".format(stats.total_amount) }} VND</span></h4>
+                        <h3>Tổng tiền trong giỏ hàng </h3>
+                        <p>Tổng sản phẩm<span>{{ stats.total_quantity }}</span></p>
+                        <p>Phí vận chuyển<span>0</span></p>
+                        <h4>Thành tiền<span>{{ "{:,.1f}".format(stats.total_amount) }} VND</span></h4>
                     </div>
                     <div class="cart-btn">
                         <button>Phương thức nhận hàng</button>
