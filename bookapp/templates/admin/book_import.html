@@ -5,31 +5,35 @@
     <div class="card shadow-sm">
         <div class="card-header">
             <form method="POST" action="{{ url_for('bookimportview.add_import') }}">
-                <!-- Tên sách -->
+                <div class="form-group">
+                    <label>Áp dụng quy định:</label>
+                    {% for regulation in regulations %}
+                    {% if regulation.is_active %}
+                    <div class="form-check">
+            <span class="form-check-label">
+                {{ regulation.name }} ({{ regulation.value }})
+            </span>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+
                 <div class="form-group">
                     <label for="book_name">Tên Sách:</label>
                     <input type="text" name="book_name" class="form-control" required>
                 </div>
-
-                <!-- Thể loại -->
                 <div class="form-group">
                     <label for="category_name">Thể Loại:</label>
                     <input type="text" name="category_name" class="form-control" required>
                 </div>
-
-                <!-- Số lượng -->
                 <div class="form-group">
                     <label for="quantity">Số Lượng:</label>
                     <input type="number" name="quantity" class="form-control" required>
                 </div>
-
-                <!-- Đơn giá -->
                 <div class="form-group">
                     <label for="unit_price">Đơn Giá:</label>
                     <input type="number" name="unit_price" class="form-control" step="0.01" required>
                 </div>
-
-                <!-- Ngày nhập -->
                 <div class="form-group">
                     <label for="import_date">Ngày Nhập:</label>
                     <input type="date" name="import_date" class="form-control">

@@ -85,26 +85,32 @@ class ReceiptDetail(db.Model):
     quantity = Column(Integer, default=0)
     unit_price = Column(Float, default=0)
 
-class ImportEntry(BaseModel):
-    __tablename__ = 'import_entries'
-    book_id = Column(Integer, ForeignKey('book.id'), nullable=False)  # Thêm liên kết với Book
-    book_name = Column(String(255), nullable=False)
-    quantity = Column(Integer, nullable=False)
-    unit_price = Column(Float, nullable=False)
-    import_date = Column(DateTime, default=datetime.now)
 
-    # Thêm relationship với Book
-    book = relationship('Book', backref='import_entries', lazy=True)
+class RegulationImport(BaseModel):
+    __tablename__ = 'regulation_import'
 
-    def __repr__(self):
-        return f'<ImportEntry {self.book_name} - {self.quantity}>'
-
+    regulation_id = Column(Integer, ForeignKey('regulations.id'), primary_key=True)
+    import_entry_id = Column(Integer, ForeignKey('import_entries.id'), primary_key=True)
+    applied_value = Column(Float, nullable=False)  # Giá trị quy định tại thời điểm áp dụng
 
 class Regulation(BaseModel):
     __tablename__ = 'regulations'
     name = Column(String(100), nullable=False)
     value = Column(Float, nullable=False)
     is_active = Column(Boolean, default=True)
+    import_entries = relationship('ImportEntry',
+                                  secondary='regulation_import',
+                                  backref='regulations')
+
+
+class ImportEntry(BaseModel):
+    __tablename__ = 'import_entries'
+    book_id = Column(Integer, ForeignKey('book.id'), nullable=False)
+    book_name = Column(String(255), nullable=False)
+    quantity = Column(Integer, nullable=False)
+    unit_price = Column(Float, nullable=False)
+    import_date = Column(DateTime, default=datetime.now)
+    book = relationship('Book', backref='import_entries')
 
 if __name__ == '__main__':
     with app.app_context():
