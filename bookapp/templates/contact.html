@@ -1,0 +1,76 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Liên Hệ{% endblock %}
+
+{% block content %}
+<section class="contact">
+    <div class="container">
+        <div class="section-header">
+            <h3>Liên Hệ</h3>
+            <p>Hãy liên hệ với chúng tôi nếu bạn có bất kỳ câu hỏi hay thắc mắc nào.</p>
+        </div>
+        {% if not current_user.is_authenticated %}
+        <div class="alert alert-warning" role="alert">
+            Bạn phải <a href="{{ url_for('user_signin') }}" class="alert-link">đăng nhập</a> để gửi biểu mẫu liên hệ.
+        </div>
+        {% else %}
+        <div class="row contact-info">
+            <div class="col-md-4">
+                <h4><i class="fa fa-map-marker"></i> Địa chỉ</h4>
+                <p>123 Tên Đường, Thành Phố, Quốc Gia</p>
+            </div>
+            <div class="col-md-4">
+                <h4><i class="fa fa-envelope"></i> Email</h4>
+                <p>info@example.com</p>
+            </div>
+            <div class="col-md-4">
+                <h4><i class="fa fa-phone"></i> Điện thoại</h4>
+                <p>+123 456 7890</p>
+            </div>
+        </div>
+        <div class="form">
+            <form id="contactForm" method="post" action="{{ url_for('submit_contact_form') }}">
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="text" name="name" class="form-control" placeholder="Tên của bạn" required>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="email" name="email" class="form-control" placeholder="Email của bạn" required>
+                    </div>
+                </div>
+                <textarea name="message" class="form-control" rows="5" placeholder="Tin nhắn của bạn" required></textarea>
+                <button type="submit" class="btn btn-primary mt-3">Gửi Tin Nhắn</button>
+            </form>
+        </div>
+        <div id="successMessage" style="display: none; color: green; margin-top: 10px;">
+            Gửi biểu mẫu thành công!
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<script>
+    document.getElementById('contactForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Ngăn chặn việc tải lại trang
+
+        var formData = new FormData(this);
+
+        fetch(this.action, {
+            method: 'POST',
+            body: formData
+        }).then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error: ' + data.error);
+            } else {
+                document.getElementById('successMessage').style.display = 'block';
+                // Reset form after successful submission
+                document.getElementById('contactForm').reset();
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+            alert('Đã xảy ra lỗi khi gửi biểu mẫu. Vui lòng thử lại sau.');
+        });
+    });
+</script>
+{% endblock %}

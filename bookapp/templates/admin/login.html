@@ -24,7 +24,7 @@
                 {% endif %}
                 {% endwith %}
 
-                <form method="post" action="/admin-login">
+                <form action="{{ url_for('admin_login') }}" method="post">
                     <div class="input-group">
                         <label class="form-label w-100"><i class="fas fa-user input-icon"></i>Tên tài khoản</label>
                         <input type="text" class="form-control" placeholder="Tên tài khoản" name="username" required/>

@@ -296,11 +296,19 @@ class StatsView(BaseView):
                         book_stats=book_stats,
                         total_revenue=total_revenue)
 
+class MyAdminIndexView(AdminIndexView):
+    @expose('/')
+    def index(self):
+        if not current_user.is_authenticated or current_user.user_role != UserRole.ADMIN:
+            return redirect(url_for('admin_login'))  # Chuyển hướng đến trang đăng nhập admin
+        return super(MyAdminIndexView, self).index()
+
 # Khởi tạo Admin với view tùy chỉnh
 admin = Admin(app=app,
              name="BookStore Management",
              template_mode="bootstrap4",
              index_view=MyAdminIndexView())
+
 
 
 admin.add_view(BookCategoryView(BookCategory, db.session))
