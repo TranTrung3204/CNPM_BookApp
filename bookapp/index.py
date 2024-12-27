@@ -383,6 +383,45 @@ def submit_contact_form():
         return jsonify({'error': 'Đã xảy ra lỗi khi gửi biểu mẫu. Vui lòng thử lại sau.'}), 500
 
 
+from flask import send_file
+import io
+
+
+@app.route('/export-stats/<int:month>/<int:year>')
+@login_required
+def export_stats(month, year):
+    if not current_user.is_authenticated or current_user.user_role not in [UserRole.ADMIN, UserRole.QLKHO]:
+        flash('Bạn không có quyền truy cập chức năng này!', 'error')
+        return redirect(url_for('index'))
+
+    try:
+        # Lấy dữ liệu thống kê
+        revenue_stats = utils.stats_by_category(month, year)
+        book_stats = utils.stats_book_sold(month, year)
+        total_revenue = sum(stat[1] for stat in revenue_stats) if revenue_stats else 0
+
+        # Tạo file Excel
+        wb = utils.export_stats_to_excel(revenue_stats, book_stats, month, year, total_revenue)
+
+        # Lưu file vào buffer
+        excel_file = io.BytesIO()
+        wb.save(excel_file)
+        excel_file.seek(0)
+
+        # Tạo tên file
+        filename = f"bao-cao-thang-{month}-nam-{year}.xlsx"
+
+        return send_file(
+            excel_file,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
+
+    except Exception as e:
+        flash(f'Lỗi khi xuất báo cáo: {str(e)}', 'error')
+        return redirect(url_for('admin.index'))
+
 if __name__ == '__main__':
     from bookapp.admin import *
     app.run(debug=True)

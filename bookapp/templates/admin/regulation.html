@@ -1,14 +1,14 @@
 {% extends 'admin/base.html' %}
 
 {% block body %}
-<div class="container">
-    <h1>Quản Lý Quy Định</h1>
+<div class="container mt-5">
+    <h1 class="text-center text-primary mb-4">Quản Lý Quy Định</h1>
 
     <div class="row">
         <!-- Phần form nhập quy định mới (bên trái) -->
         <div class="col-md-5">
-            <div class="card shadow-sm">
-                <div class="card-header">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
                     <h5>{% if regulation %}Chỉnh Sửa Quy Định{% else %}Thêm Quy Định Mới{% endif %}</h5>
                 </div>
                 <div class="card-body">
@@ -16,21 +16,23 @@
                         {% if regulation %}
                             <input type="hidden" name="id" value="{{ regulation.id }}">
                         {% endif %}
-                        <div class="form-group">
-                            <label for="name">Tên Quy Định:</label>
-                            <input type="text" name="name" class="form-control" value="{{ regulation.name if regulation else '' }}" required>
+                        <div class="form-group mb-4">
+                            <label for="name" class="font-weight-bold">Tên Quy Định:</label>
+                            <input type="text" name="name" class="form-control form-control-lg" value="{{ regulation.name if regulation else '' }}" required placeholder="Nhập tên quy định">
                         </div>
-                        <div class="form-group">
-                            <label for="value">Giá Trị:</label>
-                            <input type="text" name="value" class="form-control" value="{{ regulation.value if regulation else '' }}" required>
+                        <div class="form-group mb-4">
+                            <label for="value" class="font-weight-bold">Giá Trị:</label>
+                            <input type="text" name="value" class="form-control form-control-lg" value="{{ regulation.value if regulation else '' }}" required placeholder="Nhập giá trị quy định">
                         </div>
-                        <div class="form-check">
+                        <div class="form-check mb-4">
                             <input type="checkbox" name="is_active" class="form-check-input" {% if regulation and regulation.is_active %}checked{% endif %}>
                             <label class="form-check-label" for="is_active">Kích Hoạt</label>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-3">
-                            {% if regulation %}Cập Nhật Quy Định{% else %}Thêm Quy Định{% endif %}
-                        </button>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                {% if regulation %}Cập Nhật Quy Định{% else %}Thêm Quy Định{% endif %}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -38,8 +40,8 @@
 
         <!-- Phần danh sách quy định (bên phải) -->
         <div class="col-md-7">
-            <div class="card shadow-sm">
-                <div class="card-header">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
                     <h5>Danh Sách Quy Định</h5>
                 </div>
                 <div class="card-body">
@@ -62,7 +64,7 @@
                             {% endfor %}
                         </ul>
                     {% else %}
-                        <p>Không có quy định nào.</p>
+                        <p class="text-muted">Không có quy định nào.</p>
                     {% endif %}
                 </div>
             </div>

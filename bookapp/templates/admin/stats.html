@@ -27,15 +27,18 @@
     </div>
 
     <div class="row mb-4">
-        <div class="col text-center">
-            <button class="btn btn-primary mx-2" onclick="showReport('revenue')">Báo Cáo Doanh Thu</button>
-            <button class="btn btn-secondary mx-2" onclick="showReport('frequency')">Báo Cáo Tần Suất</button>
-        </div>
+    <div class="col text-center">
+        <button class="btn btn-primary mx-2" onclick="showReport('revenue')">Báo Cáo Doanh Thu</button>
+        <button class="btn btn-secondary mx-2" onclick="showReport('frequency')">Báo Cáo Tần Suất</button>
+        <a href="{{ url_for('export_stats', month=month, year=year) }}" class="btn btn-success mx-2">
+            Xuất Excel
+        </a>
     </div>
+</div>
 
     <div class="row">
         <!-- Báo cáo doanh thu -->
-        <div class="col-5" id="tableSection">
+        <div class="col-12 col-md-6" id="tableSection">
             <div id="revenueReport" class="card mb-4" style="display: none;">
                 <div class="card-header text-center">
                     <h3>BÁO CÁO DOANH THU THEO THÁNG</h3>
@@ -48,7 +51,7 @@
                                 <th>STT</th>
                                 <th>Thể loại sách</th>
                                 <th>Doanh thu</th>
-                                <th>Số lượt thuê</th>
+                                <th>Số lượt bán</th>
                                 <th>Tỷ lệ</th>
                             </tr>
                         </thead>
@@ -106,10 +109,10 @@
         </div>
 
         <!-- Biểu đồ -->
-        <div class="col-7">
-            <div class="card">
+        <div class="col-12 col-md-6">
+            <div class="card shadow-sm mb-4">
                 <div class="card-body">
-                    <canvas id="statsChart"></canvas>
+                    <canvas id="statsChart" class="d-block mx-auto"></canvas>
                 </div>
             </div>
         </div>
@@ -144,8 +147,8 @@ const frequencyData = {
 };
 
 const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
+    responsive: true,           // Đảm bảo biểu đồ tự động thay đổi kích thước
+    maintainAspectRatio: false, // Tắt tỷ lệ giữ nguyên của biểu đồ
     scales: {
         y: {
             beginAtZero: true
@@ -185,29 +188,49 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
-    .card {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        margin-bottom: 1rem;
+    .card-body {
+        position: relative;
+        height: 100%;
     }
+
+    canvas {
+        width: 100% !important;
+        height: 400px !important; /* Đảm bảo chiều cao tối thiểu của biểu đồ */
+    }
+
+    .card {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        margin-bottom: 1rem;
+        border-radius: 0.5rem;
+    }
+
     .card-header {
         background-color: #f8f9fa;
         border-bottom: 2px solid #dee2e6;
+        font-weight: bold;
     }
-    .table th {
-        background-color: #f8f9fa;
+
+    .thead-dark th {
+        background-color: #343a40;
+        color: white;
     }
+
     .btn {
         padding: 0.5rem 2rem;
     }
+
     .btn-primary:focus, .btn-secondary:focus {
         box-shadow: none;
     }
-    canvas {
-        min-height: 400px;
+
+    .table th, .table td {
+        vertical-align: middle;
     }
+
     .form-inline {
         justify-content: center;
     }
+
     .form-group {
         margin: 0;
     }

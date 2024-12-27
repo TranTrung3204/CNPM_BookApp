@@ -17,9 +17,6 @@
                         <!-- Update the table header to include checkbox column -->
                         <thead class="thead-dark">
                         <tr>
-                            <th>
-                                <input type="checkbox" id="selectAll" onclick="toggleAllProducts()">
-                            </th>
                             <th>Mã sản phẩm</th>
                             <th>Tên sản phẩm</th>
                             <th>Số lượng</th>
@@ -30,10 +27,6 @@
                         <tbody class="align-middle">
                         {% for c in session.get('cart', {}).values() %}
                         <tr id="product-{{ c.get('id', '') }}">
-                            <td>
-                                <input type="checkbox" class="product-select"
-                                       onchange="updateSelectedTotal()">
-                            </td>
                             <td><a href="#">{{ c.get('id', '') }}</a></td>
                             <td><a href="#">{{ c.get('name', '') }}</a></td>
                             <td>

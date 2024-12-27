@@ -1,45 +1,71 @@
 {% extends 'admin/base.html' %}
+
 {% block body %}
-<div class="container">
-    <h1>Lập Phiếu Nhập Sách</h1>
-    <div class="card shadow-sm">
-        <div class="card-header">
+<div class="container mt-5">
+    <h1 class="text-center text-primary mb-4">Phiếu Nhập Sách</h1>
+
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white text-center">
+            <h4>Thông Tin Phiếu Nhập</h4>
+        </div>
+        <div class="card-body">
+            <!-- Hiển thị thông báo lỗi hoặc thành công -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
             <form method="POST" action="{{ url_for('bookimportview.add_import') }}">
-                <div class="form-group">
-                    <label>Áp dụng quy định:</label>
+                <!-- Áp dụng quy định -->
+                <div class="form-group mb-4">
+                    <label class="font-weight-bold">Áp dụng quy định:</label>
                     {% for regulation in regulations %}
-                    {% if regulation.is_active %}
-                    <div class="form-check">
-            <span class="form-check-label">
-                {{ regulation.name }} ({{ regulation.value }})
-            </span>
-                    </div>
-                    {% endif %}
+                        {% if regulation.is_active %}
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" disabled checked>
+                                <label class="form-check-label">{{ regulation.name }} ({{ regulation.value }})</label>
+                            </div>
+                        {% endif %}
                     {% endfor %}
                 </div>
 
-                <div class="form-group">
-                    <label for="book_name">Tên Sách:</label>
-                    <input type="text" name="book_name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="category_name">Thể Loại:</label>
-                    <input type="text" name="category_name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="quantity">Số Lượng:</label>
-                    <input type="number" name="quantity" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="unit_price">Đơn Giá:</label>
-                    <input type="number" name="unit_price" class="form-control" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label for="import_date">Ngày Nhập:</label>
-                    <input type="date" name="import_date" class="form-control">
+                <!-- Tên sách -->
+                <div class="form-group mb-4">
+                    <label for="book_name" class="font-weight-bold">Tên Sách:</label>
+                    <input type="text" name="book_name" class="form-control form-control-lg" required placeholder="Nhập tên sách">
                 </div>
 
-                <button type="submit" class="btn btn-primary">Lập Phiếu Nhập</button>
+                <!-- Thể loại -->
+                <div class="form-group mb-4">
+                    <label for="category_name" class="font-weight-bold">Thể Loại:</label>
+                    <input type="text" name="category_name" class="form-control form-control-lg" required placeholder="Nhập thể loại sách">
+                </div>
+
+                <!-- Số lượng -->
+                <div class="form-group mb-4">
+                    <label for="quantity" class="font-weight-bold">Số Lượng:</label>
+                    <input type="number" name="quantity" class="form-control form-control-lg" required placeholder="Nhập số lượng sách">
+                </div>
+
+                <!-- Đơn giá -->
+                <div class="form-group mb-4">
+                    <label for="unit_price" class="font-weight-bold">Đơn Giá (VNĐ):</label>
+                    <input type="number" name="unit_price" class="form-control form-control-lg" step="0.01" required placeholder="Nhập đơn giá sách">
+                </div>
+
+                <!-- Ngày nhập -->
+                <div class="form-group mb-4">
+                    <label for="import_date" class="font-weight-bold">Ngày Nhập:</label>
+                    <input type="date" name="import_date" class="form-control form-control-lg">
+                </div>
+
+                <!-- Nút submit -->
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary btn-lg px-5">Lập Phiếu Nhập</button>
+                </div>
             </form>
         </div>
     </div>

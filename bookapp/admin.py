@@ -294,7 +294,8 @@ class StatsView(BaseView):
                          revenue_stats=revenue_stats,
                          book_stats=book_stats,
                          total_revenue=total_revenue)
-
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.user_role in [UserRole.ADMIN, UserRole.QLKHO]
 
 # Khởi tạo Admin với view tùy chỉnh
 admin = Admin(app=app,
