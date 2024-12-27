@@ -1,6 +1,8 @@
+from functools import wraps
+
 from flask import render_template, Flask, flash
 from flask import request, redirect, url_for, session, jsonify
-from flask_login import login_user, logout_user
+from flask_login import login_user, logout_user, LoginManager, login_required
 import cloudinary.uploader
 from bookapp import app, utils,login
 from bookapp.models import UserRole,Book,BookCategory
@@ -8,15 +10,33 @@ from math import ceil
 
 @app.route("/")
 def index():
+    if current_user.is_authenticated and current_user.user_role == UserRole.ADMIN:
+        return redirect(url_for('user_signin'))  # Chuyển hướng đến trang đăng nhập người dùng nếu là admin
     kw = request.args.get('kw')
     prods = utils.load_books(kw)
     return render_template('index.html', products=prods)
 
 
-@app.route("/register", methods=['get', 'post'])
+# Cấu hình LoginManager
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'user_signin'  # Trang đăng nhập nếu chưa đăng nhập
+
+@app.route('/contact')
+def contact():
+    if current_user.is_authenticated and current_user.user_role == UserRole.ADMIN:
+        return redirect(url_for('user_signin'))  # Chuyển hướng đến trang đăng nhập người dùng nếu là admin
+    return render_template('contact.html')
+
+@login_manager.user_loader
+def user_load(user_id):
+    return utils.get_user_by_id(user_id=user_id)# Decorator để kiể
+
+
+@app.route("/register", methods=['GET', 'POST'])
 def user_register():
     err_msg = ""
-    if request.method.__eq__('POST'):
+    if request.method == 'POST':
         name = request.form.get('name')
         username = request.form.get('username')
         email = request.form.get('email')
@@ -24,7 +44,7 @@ def user_register():
         confirm = request.form.get('confirm')
         avatar_path = None
         try:
-            if password.strip().__eq__(confirm.strip()):
+            if password.strip() == confirm.strip():
                 avatar = request.files.get('avatar')
                 if avatar:
                     res = cloudinary.uploader.upload(avatar)
@@ -32,52 +52,54 @@ def user_register():
                 utils.add_user(name=name, username=username, password=password, email=email, avatar=avatar_path)
                 return redirect(url_for('user_signin'))
             else:
-                err_msg = 'passwords do not match'
+                err_msg = 'Passwords do not match'
         except Exception as ex:
-            err_msg = "404 not found" + str(ex)
+            err_msg = "404 not found: " + str(ex)
 
     return render_template('register.html', err_msg=err_msg)
 
-
-@app.route("/user-login", methods=['get', 'post'])
+@app.route("/user-login", methods=['GET', 'POST'])
 def user_signin():
     err_msg = ""
-    if request.method.__eq__('POST'):
+    if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         user = utils.check_login(username=username, password=password)
         if user:
             login_user(user=user)
-            return redirect(url_for('index'))
+            # Kiểm tra vai trò người dùng và chuyển hướng phù hợp
+            if user.user_role == UserRole.ADMIN:
+                return redirect(url_for('user_signin'))  # Chuyển hướng đến trang đăng nhập người dùng nếu là admin
+            else:
+                return redirect(url_for('index'))
         else:
             err_msg = 'Username or password is incorrect !!!'
     return render_template('login.html', err_msg=err_msg)
 
 
-@app.route('/admin-login', methods=['POST'])
+@app.route('/admin-login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
 
-        user = utils.check_login(username=username,
-                               password=password,
-                               user_role=[UserRole.ADMIN, UserRole.QLKHO])
+        user = utils.check_login(username=username, password=password, user_role=[UserRole.ADMIN, UserRole.QLKHO])
 
         if user:
             login_user(user=user)
             return redirect('/admin')  # Chuyển hướng về trang admin
         else:
             flash('Đăng nhập không hợp lệ. Vui lòng kiểm tra lại thông tin.', 'error')
-            return redirect('/admin')  # Quay lại trang login khi đăng nhập thất bại
+
+    return render_template('admin/login.html')  # Hiển thị trang đăng nhập admin
 
 
 @app.route("/user-logout")
 def user_signout():
-    # Xóa giỏ hàng khỏi session trước khi đăng xuất
-    if 'cart' in session:
+    if current_user.is_authenticated and current_user.user_role == UserRole.ADMIN:
+        return redirect(url_for('user_signin'))  # Chuyển hướng đến trang đăng nhập người dùng nếu là admin
+    if 'cart' in session: # xoá giỏ hàng trước khi đăng xuất
         del session['cart']
-
     logout_user()
     return redirect(url_for('user_signin'))
 
@@ -138,12 +160,10 @@ def filter_by_category(category_id):
 
 @app.route('/cart')
 def cart():
-    err_msg = ""
+    if current_user.is_authenticated and current_user.user_role == UserRole.ADMIN:
+        return redirect(url_for('user_signin'))  # Chuyển hướng đến trang đăng nhập người dùng nếu là admin
     cart = session.get('cart', {})
-    return render_template('cart.html',
-                           cart=cart,
-                           err_msg=err_msg,
-                           stats=utils.count_cart(session.get('cart')))
+    return render_template('cart.html', cart=cart, stats=utils.count_cart(cart))
 
 
 @app.route('/api/add-cart', methods=['post'])
@@ -343,6 +363,24 @@ def common_response():
         'cart_stats': utils.count_cart(session.get('cart',{}))
     }
 
+@app.route('/submit_contact_form', methods=['POST'])
+@login_required
+def submit_contact_form():
+    try:
+        # Lấy dữ liệu từ biểu mẫu
+        name = request.form['name']
+        email = request.form['email']
+        message = request.form['message']
+
+        # Log thông tin biểu mẫu (nếu cần)
+        app.logger.info(f"Contact form submitted: Name={name}, Email={email}, Message={message}")
+
+        # Trả về phản hồi JSON thành công
+        return jsonify({'message': 'Gửi biểu mẫu thành công!'}), 200
+    except Exception as e:
+        # Ghi log lỗi
+        app.logger.error(f"Error submitting contact form: {e}")
+        return jsonify({'error': 'Đã xảy ra lỗi khi gửi biểu mẫu. Vui lòng thử lại sau.'}), 500
 
 
 if __name__ == '__main__':
